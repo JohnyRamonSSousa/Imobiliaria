@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ScrollTopButton from './components/ScrollTopButton';
@@ -19,6 +19,7 @@ import AdminDashboardV2 from './pages/AdminDashboardV2';
 import TermsOfUse from './pages/TermsOfUse';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import ServiceDetail from './pages/ServiceDetail';
+import NotFound from './pages/NotFound';
 
 import ProtectedMasterRoute from './components/ProtectedMasterRoute';
 import { PropertyProvider, usePropertyDetails } from './contexts/PropertyContext';
@@ -68,6 +69,7 @@ const AppContent: React.FC = () => {
           <Route path="/termos" element={<TermsOfUse />} />
           <Route path="/privacidade" element={<PrivacyPolicy />} />
           <Route path="/servico/:id" element={<ServiceDetail />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
       {!isAdminRoute && <Footer />}
