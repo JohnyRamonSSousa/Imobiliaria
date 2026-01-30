@@ -15,28 +15,6 @@ const AIEditor: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isLoggedIn = !!user;
 
-  useEffect(() => {
-    if (!loading && !isLoggedIn) {
-      navigate('/login?reason=services&redirect=/editor');
-    }
-  }, [isLoggedIn, loading, navigate]);
-
-  if (loading || !isLoggedIn) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <Lock className="h-12 w-12 text-indigo-600 mx-auto mb-4 animate-bounce" />
-          <h2 className="text-xl font-bold text-gray-900">
-            {loading ? 'Carregando...' : 'Acesso Restrito'}
-          </h2>
-          <p className="text-gray-500">
-            {loading ? 'Verificando sua sessão...' : 'Redirecionando para login...'}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {

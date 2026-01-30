@@ -20,28 +20,6 @@ const ServicesPage: React.FC = () => {
   const isLoggedIn = !!user;
   const [activeTab, setActiveTab] = useState('all');
 
-  useEffect(() => {
-    if (!loading && !isLoggedIn) {
-      navigate('/login?reason=services&redirect=/servicos');
-    }
-  }, [isLoggedIn, loading, navigate]);
-
-  if (loading || !isLoggedIn) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <Lock className="h-12 w-12 text-indigo-600 mx-auto mb-4 animate-bounce" />
-          <h2 className="text-xl font-bold text-gray-900">
-            {loading ? 'Carregando...' : 'Acesso Restrito'}
-          </h2>
-          <p className="text-gray-500">
-            {loading ? 'Verificando sua sessão...' : 'Redirecionando para login...'}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   const handleServiceClick = (action: string) => {
     if (action === 'venda') navigate('/imoveis');
     else if (action === 'aluguel') navigate('/aluguel');

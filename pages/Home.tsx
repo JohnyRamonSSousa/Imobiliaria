@@ -73,6 +73,12 @@ const HomePage: React.FC = () => {
   ];
 
   const handleServiceClick = (path: string) => {
+    // Aluguel and imoveis are now unrestricted for browsing
+    if (path === '/aluguel' || path.startsWith('/aluguel?') || path === '/imoveis') {
+      navigate(path);
+      return;
+    }
+
     if (!isLoggedIn) {
       navigate(`/login?reason=services&redirect=${encodeURIComponent(path)}`);
     } else {

@@ -22,6 +22,7 @@ import ServiceDetail from './pages/ServiceDetail';
 import NotFound from './pages/NotFound';
 
 import ProtectedMasterRoute from './components/ProtectedMasterRoute';
+import ProtectedRoute from './components/ProtectedRoute';
 import { PropertyProvider, usePropertyDetails } from './contexts/PropertyContext';
 import PropertyModal from './components/PropertyModal';
 
@@ -56,11 +57,11 @@ const AppContent: React.FC = () => {
           <Route path="/cadastro" element={<RegisterPage />} />
           <Route path="/imoveis" element={<PropertiesPage />} />
           <Route path="/aluguel" element={<RentProperties />} />
-          <Route path="/vender" element={<SellProperty />} />
-          <Route path="/servicos" element={<ServicesPage />} />
-          <Route path="/pagamento/:id" element={<PaymentPage />} />
-          <Route path="/editor" element={<AIEditor />} />
-          <Route path="/dashboard" element={<CRM />} />
+          <Route path="/vender" element={<ProtectedRoute reason="sell"><SellProperty /></ProtectedRoute>} />
+          <Route path="/servicos" element={<ProtectedRoute reason="services"><ServicesPage /></ProtectedRoute>} />
+          <Route path="/pagamento/:id" element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
+          <Route path="/editor" element={<ProtectedRoute reason="services"><AIEditor /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><CRM /></ProtectedRoute>} />
           <Route path="/admin/secure/dashboard" element={
             <ProtectedMasterRoute>
               <AdminDashboardV2 />
@@ -68,7 +69,7 @@ const AppContent: React.FC = () => {
           } />
           <Route path="/termos" element={<TermsOfUse />} />
           <Route path="/privacidade" element={<PrivacyPolicy />} />
-          <Route path="/servico/:id" element={<ServiceDetail />} />
+          <Route path="/servico/:id" element={<ProtectedRoute reason="services"><ServiceDetail /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
