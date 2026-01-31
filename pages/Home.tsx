@@ -61,6 +61,7 @@ const HomePage: React.FC = () => {
   const allAvailableProperties = [...dbProperties, ...PROPERTIES].filter(p => !soldIds.includes(p.id.toString()));
   const featuredProperties = allAvailableProperties.filter(p => p.featured || dbProperties.includes(p)).slice(0, 3);
   const apartmentProperties = allAvailableProperties.filter(p => p.type === 'Apartamento').slice(0, 3);
+  const houseProperties = allAvailableProperties.filter(p => p.type === 'Casa').slice(0, 3);
   const ruralProperties = allAvailableProperties.filter(p => p.type === 'Terreno' || p.type === 'Chácara').slice(0, 3);
 
   const services = [
@@ -200,8 +201,43 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Rural Properties (Terrenos e Chácaras) Section */}
+      {/* House Properties Section */}
       <section className="py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+            <div>
+              <div className="inline-block px-4 py-1.5 bg-amber-50 text-amber-600 rounded-full text-xs font-bold uppercase tracking-widest mb-4">
+                Conforto & Espaço
+              </div>
+              <h2 className="text-4xl md:text-5xl font-serif font-bold text-gray-900 leading-tight">
+                Casas
+              </h2>
+              <p className="text-gray-500 mt-4 max-w-xl">
+                Encontre a casa dos seus sonhos, com espaço e conforto para toda a família.
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/imoveis?type=Casa')}
+              className="text-amber-600 font-bold hover:text-amber-700 flex items-center space-x-2 group transition-colors"
+            >
+              <span>Ver todas as casas</span>
+              <span className="group-hover:translate-x-1 transition-transform">→</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {houseProperties.map((property) => (
+              <PropertyCard
+                key={property.id}
+                property={property}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Rural Properties (Terrenos e Chácaras) Section */}
+      <section className="py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
             <div>
