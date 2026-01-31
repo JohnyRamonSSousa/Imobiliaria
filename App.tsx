@@ -19,6 +19,7 @@ import AdminDashboardV2 from './pages/AdminDashboardV2';
 import TermsOfUse from './pages/TermsOfUse';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import ServiceDetail from './pages/ServiceDetail';
+import ForgotPasswordPage from './pages/ForgotPassword';
 import NotFound from './pages/NotFound';
 
 import ProtectedMasterRoute from './components/ProtectedMasterRoute';
@@ -55,6 +56,7 @@ const AppContent: React.FC = () => {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/cadastro" element={<RegisterPage />} />
+          <Route path="/recuperar-senha" element={<ForgotPasswordPage />} />
           <Route path="/imoveis" element={<PropertiesPage />} />
           <Route path="/aluguel" element={<RentProperties />} />
           <Route path="/vender" element={<ProtectedRoute reason="sell"><SellProperty /></ProtectedRoute>} />

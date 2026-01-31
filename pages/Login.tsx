@@ -112,68 +112,85 @@ const LoginPage: React.FC = () => {
       <div className="max-w-md w-full">
         <div className="text-center mb-10">
           <Link to="/" className="inline-flex items-center space-x-2 group mb-6">
-            <span className="text-2xl font-serif font-bold text-gray-900">JE<span className="text-indigo-600"> Imobiliária</span></span>
+            <span className="text-3xl font-serif font-bold text-gray-900">JE<span className="text-indigo-600"> Imobiliária</span></span>
           </Link>
-          <h2 className="text-3xl font-serif font-bold text-gray-900">Bem-vindo de volta</h2>
-          <p className="text-gray-500 mt-2">Acesse sua conta para continuar</p>
         </div>
 
-        <div className="bg-white p-8 rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100">
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 text-sm rounded-xl flex items-center">
-              <AlertCircle className="h-5 w-5 mr-3 flex-shrink-0" />
-              {error}
-            </div>
-          )}
-
-          <form className="space-y-6" onSubmit={handleLogin}>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">E-mail</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="seu@email.com"
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between mb-2">
-                <label className="block text-sm font-bold text-gray-700">Senha</label>
-                <a href="#" className="text-xs font-bold text-indigo-600 hover:text-indigo-700">Esqueceu a senha?</a>
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center"
+        <div className="bg-white rounded-[2rem] shadow-2xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
+          {/* Top Toggle Buttons */}
+          <div className="flex border-b border-gray-100">
+            <Link
+              to="/login"
+              className="flex-1 py-6 text-center font-bold text-indigo-600 bg-white relative"
             >
-              {isLoading ? "Acessando..." : "Acessar Conta"}
-            </button>
-          </form>
+              Login
+              <div className="absolute bottom-0 left-0 w-full h-1 bg-indigo-600"></div>
+            </Link>
+            <Link
+              to="/cadastro"
+              className="flex-1 py-6 text-center font-bold text-gray-400 hover:text-gray-600 transition-colors bg-gray-50/50"
+            >
+              Cadastre-se
+            </Link>
+          </div>
 
-          <div className="mt-8 pt-8 border-t border-gray-100 text-center">
-            <p className="text-sm text-gray-500">
-              Ainda não tem conta?{' '}
-              <Link to="/cadastro" className="text-indigo-600 font-bold hover:text-indigo-700">Crie agora</Link>
-            </p>
+          <div className="p-8 md:p-10">
+            <div className="mb-8">
+              <h2 className="text-2xl font-serif font-bold text-gray-900">Bem-vindo de volta</h2>
+              <p className="text-gray-500 mt-1">Acesse sua conta para continuar</p>
+            </div>
+
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 text-sm rounded-xl flex items-center">
+                <AlertCircle className="h-5 w-5 mr-3 flex-shrink-0" />
+                {error}
+              </div>
+            )}
+
+            <form className="space-y-6" onSubmit={handleLogin}>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">E-mail</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="seu@email.com"
+                    className="w-full pl-10 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between mb-2">
+                  <label className="block text-sm font-bold text-gray-700">Senha</label>
+                  <Link to="/recuperar-senha" title="Esqueceu a senha?" className="text-xs font-bold text-indigo-600 hover:text-indigo-700">Esqueceu a senha?</Link>
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full pl-10 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center transform active:scale-[0.98]"
+              >
+                {isLoading ? (
+                  <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                ) : "Acessar Conta"}
+              </button>
+            </form>
           </div>
         </div>
       </div>
