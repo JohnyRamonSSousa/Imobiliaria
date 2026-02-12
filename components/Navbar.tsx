@@ -15,7 +15,6 @@ const Navbar: React.FC = () => {
     { name: 'Comprar', path: '/imoveis' },
     { name: 'Anunciar', path: '/vender' },
     { name: 'Consultores', path: '/#consultores' },
-    { name: 'Contato', path: '/#contato' },
   ];
 
   const handleNavClick = (path: string, name: string) => {
