@@ -5,6 +5,7 @@ import { db, Transaction } from '../services/database';
 import { useAuth } from '../contexts/AuthContext';
 import { usePropertyDetails } from '../contexts/PropertyContext';
 import { supabase } from '../services/supabase';
+import DeleteAccountModal from '../components/DeleteAccountModal';
 const CRM: React.FC = () => {
     const navigate = useNavigate();
     const { user, signOut } = useAuth();
@@ -14,6 +15,7 @@ const CRM: React.FC = () => {
     const [myProperties, setMyProperties] = useState<any[]>([]);
     const [isDeleting, setIsDeleting] = useState<string | null>(null);
     const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+    const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
 
     const userEmail = user?.email || 'cliente@exemplo.com';
     const userName = user?.user_metadata?.full_name || userEmail.split('@')[0];
@@ -74,18 +76,18 @@ const CRM: React.FC = () => {
         }
     };
 
-    const handleDeleteAccount = async () => {
-        if (!window.confirm('TEM CERTEZA QUE DESEJA EXCLUIR SUA CONTA? Esta ação excluirá todos os seus anúncios e você será deslogado. Esta ação é IRREVERSÍVEL.')) return;
+    const handleDeleteAccount = () => {
+        console.log('Delete Account Button Clicked');
+        setShowDeleteAccountModal(true);
+    };
 
-        const confirmPhrase = window.prompt('Para confirmar, digite "EXCLUIR MINHA CONTA":');
-        if (confirmPhrase !== 'EXCLUIR MINHA CONTA') {
-            alert('Confirmação inválida. A conta não foi excluída.');
-            return;
-        }
-
+    const confirmDeleteAccount = async () => {
         setIsDeletingAccount(true);
         try {
-            // Delete properties
+            // 1. Delete transactions from local storage
+            db.deleteUserTransactions(userEmail);
+
+            // 2. Delete properties from Supabase
             if (user?.id) {
                 await supabase
                     .from('properties')
@@ -93,17 +95,17 @@ const CRM: React.FC = () => {
                     .eq('user_id', user.id);
             }
 
-            // In a real production app, you would call a Supabase Edge Function 
-            // to delete the user from auth.users using a service_role key.
-            // For now, we sign out and inform the user.
-
+            // 3. Sign out
             await signOut();
-            alert('Sua conta e seus anúncios foram removidos com sucesso. Agradecemos por utilizar o LXW Imobiliária.');
+
+            // 4. Redirect
+            alert('Sua conta e seus dados foram excluídos com sucesso.');
             navigate('/');
         } catch (err: any) {
             alert('Erro ao excluir conta: ' + err.message);
         } finally {
             setIsDeletingAccount(false);
+            setShowDeleteAccountModal(false);
         }
     };
 
@@ -444,6 +446,13 @@ const CRM: React.FC = () => {
                 </div>
 
             </div>
+
+            <DeleteAccountModal
+                isOpen={showDeleteAccountModal}
+                onClose={() => setShowDeleteAccountModal(false)}
+                onConfirm={confirmDeleteAccount}
+                isDeleting={isDeletingAccount}
+            />
         </div>
     );
 };

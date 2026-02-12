@@ -89,6 +89,11 @@ export const db = {
     return getTransactions().filter(t => t.userEmail === email);
   },
 
+  deleteUserTransactions: (email: string): void => {
+    const transactions = getTransactions().filter(t => t.userEmail !== email);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+  },
+
   getSoldPropertyIds: (): string[] => {
     return getTransactions()
       .filter(t => t.status === 'completed')

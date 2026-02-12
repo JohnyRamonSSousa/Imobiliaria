@@ -88,7 +88,7 @@ const HomePage: React.FC = () => {
   };
 
   return (
-    <main className="pt-20">
+    <main className="">
       <Hero />
 
       {/* Services Section - Restricted access */}
