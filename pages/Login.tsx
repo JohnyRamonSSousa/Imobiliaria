@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Lock, AlertCircle, Key, Briefcase } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../services/firebase';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -28,7 +29,6 @@ const LoginPage: React.FC = () => {
     const params = new URLSearchParams(location.search);
     const reason = params.get('reason');
 
-    // Only show modal if NOT logged in (which is implied here since we didn't redirect)
     if (reason === 'buy') {
       setModalMessage('Para prosseguir com a compra deste imóvel, você precisa estar logado em sua conta.');
       setModalIcon(<AlertCircle className="h-10 w-10 text-amber-600" />);
@@ -54,28 +54,32 @@ const LoginPage: React.FC = () => {
     setError(null);
 
     try {
-      const { data, error: loginError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (loginError) throw loginError;
-
-      // Check Master Access
       if (email === 'master@je.com') {
+        // For the master user, we can still use Firebase or just redirect if that's the bypass
+        // In a real app, master@je.com should also be in Firebase
+        await signInWithEmailAndPassword(auth, email, password);
         navigate('/admin/secure/dashboard');
         return;
       }
 
+      await signInWithEmailAndPassword(auth, email, password);
       const params = new URLSearchParams(location.search);
       const redirect = params.get('redirect') || '/dashboard';
       navigate(redirect);
     } catch (err: any) {
-      setError(err.message || 'Erro ao fazer login. Verifique suas credenciais.');
+      console.error('Firebase login error:', err);
+      let message = 'Erro ao realizar login. Verifique suas credenciais.';
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        message = 'E-mail ou senha incorretos.';
+      } else if (err.code === 'auth/invalid-email') {
+        message = 'E-mail inválido.';
+      }
+      setError(message);
     } finally {
       setIsLoading(false);
     }
   };
+
 
   if (loading) {
     return (

@@ -3,11 +3,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Key, Lock, ArrowLeft, Search } from 'lucide-react';
 import { PROPERTIES } from '../constants';
 import PropertyCard from '../components/PropertyCard';
-import PropertyModal from '../components/PropertyModal';
 import { Property } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../services/supabase';
 import { db } from '../services/database';
+import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { db as firestoreDb } from '../services/firebase';
 
 const RentProperties: React.FC = () => {
   const navigate = useNavigate();
@@ -25,33 +25,33 @@ const RentProperties: React.FC = () => {
 
   const fetchDbProperties = async () => {
     try {
-      const { data, error } = await supabase
-        .from('properties')
-        .select('*')
-        .eq('listing_type', 'aluguel')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      if (data) {
-        const mapped: Property[] = data.map(p => ({
-          id: p.id,
-          title: p.title,
-          type: p.type as any,
-          listingType: p.listing_type as any,
-          price: p.price,
-          location: p.location,
-          size: p.size,
-          bedrooms: p.bedrooms,
-          bathrooms: p.bathrooms || 0,
-          garage: p.garage || 0,
-          description: p.description,
-          images: p.images,
-          featured: p.featured
-        }));
-        setDbProperties(mapped);
-      }
+      const q = query(
+        collection(firestoreDb, 'properties'),
+        where('listing_type', '==', 'aluguel'),
+        orderBy('created_at', 'desc')
+      );
+      const querySnapshot = await getDocs(q);
+      const mapped: Property[] = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          title: data.title,
+          type: data.type,
+          listingType: data.listing_type,
+          price: data.price,
+          location: data.location,
+          size: data.size,
+          bedrooms: data.bedrooms,
+          bathrooms: data.bathrooms || 0,
+          garage: data.garage || 0,
+          description: data.description,
+          images: data.images,
+          featured: data.featured
+        };
+      });
+      setDbProperties(mapped);
     } catch (err) {
-      console.error('Error fetching rentals from Supabase:', err);
+      console.error('Error fetching rentals from Firestore:', err);
     } finally {
       setDbLoading(false);
     }
@@ -61,6 +61,8 @@ const RentProperties: React.FC = () => {
   const typeFilter = queryParams.get('type');
 
   const allRentals = [...dbProperties, ...PROPERTIES.filter(p => p.listingType === 'aluguel')].filter(p => !soldIds.includes(p.id.toString()));
+
+
 
   const rentalProperties = allRentals.filter(p => {
     if (!typeFilter) return true;

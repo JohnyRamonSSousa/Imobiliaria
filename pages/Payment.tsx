@@ -14,6 +14,20 @@ const PaymentPage: React.FC = () => {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('financing');
+  const [cpf, setCpf] = useState('');
+
+  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
+    let masked = digits;
+    if (digits.length > 9) {
+      masked = digits.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+    } else if (digits.length > 6) {
+      masked = digits.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+    } else if (digits.length > 3) {
+      masked = digits.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+    }
+    setCpf(masked);
+  };
 
   useEffect(() => {
     const found = PROPERTIES.find(p => p.id === id);
@@ -93,7 +107,15 @@ const PaymentPage: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-gray-500 uppercase">CPF</label>
-                      <input required type="text" placeholder="000.000.000-00" className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" />
+                      <input
+                        required
+                        type="text"
+                        placeholder="000.000.000-00"
+                        value={cpf}
+                        onChange={handleCpfChange}
+                        maxLength={14}
+                        className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-gray-500 uppercase">Estado Civil</label>

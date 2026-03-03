@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Mail, Lock, User, Check, AlertCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../services/supabase';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { auth } from '../services/firebase';
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -15,30 +16,30 @@ const RegisterPage: React.FC = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-
     setIsLoading(true);
 
     try {
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-        },
-      });
-
-      if (signUpError) throw signUpError;
+      const { user } = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(user, { displayName: fullName });
 
       setSuccess(true);
-      setTimeout(() => navigate('/dashboard'), 2000);
+      setTimeout(() => navigate('/dashboard'), 3000);
     } catch (err: any) {
-      setError(err.message || 'Erro ao criar conta. Tente novamente.');
+      console.error('Firebase registration error:', err);
+      let message = 'Erro ao realizar cadastro. Tente novamente.';
+      if (err.code === 'auth/email-already-in-use') {
+        message = 'Este e-mail já está em uso.';
+      } else if (err.code === 'auth/weak-password') {
+        message = 'A senha deve ter pelo menos 6 caracteres.';
+      } else if (err.code === 'auth/invalid-email') {
+        message = 'E-mail inválido.';
+      }
+      setError(message);
     } finally {
       setIsLoading(false);
     }
   };
+
 
   if (success) {
     return (

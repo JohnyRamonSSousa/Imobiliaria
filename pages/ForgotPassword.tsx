@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Mail, ArrowLeft, Check, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../services/supabase';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { auth } from '../services/firebase';
 
 const ForgotPasswordPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -15,19 +16,22 @@ const ForgotPasswordPage: React.FC = () => {
     setError(null);
 
     try {
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/login`,
-      });
-
-      if (resetError) throw resetError;
-
+      await sendPasswordResetEmail(auth, email);
       setSuccess(true);
     } catch (err: any) {
-      setError(err.message || 'Erro ao enviar e-mail de recuperação. Tente novamente.');
+      console.error('Firebase password reset error:', err);
+      let message = 'Erro ao processar solicitação.';
+      if (err.code === 'auth/user-not-found') {
+        message = 'E-mail não encontrado.';
+      } else if (err.code === 'auth/invalid-email') {
+        message = 'E-mail inválido.';
+      }
+      setError(message);
     } finally {
       setIsLoading(false);
     }
   };
+
 
   if (success) {
     return (

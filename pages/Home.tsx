@@ -3,16 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { Home as HomeIcon, Key, Briefcase, BarChart3, ChevronRight, Map, Trees, ShieldCheck, ClipboardCheck } from 'lucide-react';
 import Hero from '../components/Hero';
 import PropertyCard from '../components/PropertyCard';
-import PropertyModal from '../components/PropertyModal';
 import ConsultantSection from '../components/ConsultantSection';
 import Features from '../components/Features';
 import { PROPERTIES } from '../constants';
 import { Property } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../services/supabase';
-
 import { usePropertyDetails } from '../contexts/PropertyContext';
 import { db } from '../services/database';
+import { collection, query, orderBy, getDocs } from 'firebase/firestore';
+import { db as firestoreDb } from '../services/firebase';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -29,40 +28,38 @@ const HomePage: React.FC = () => {
 
   const fetchDbProperties = async () => {
     try {
-      const { data, error } = await supabase
-        .from('properties')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      if (data) {
-        const mapped: Property[] = data.map(p => ({
-          id: p.id,
-          title: p.title,
-          type: p.type as any,
-          listingType: p.listing_type as any,
-          price: p.price,
-          location: p.location,
-          size: p.size,
-          bedrooms: p.bedrooms,
-          bathrooms: p.bathrooms || 0,
-          garage: p.garage || 0,
-          description: p.description,
-          images: p.images,
-          featured: p.featured
-        }));
-        setDbProperties(mapped);
-      }
+      const q = query(collection(firestoreDb, 'properties'), orderBy('created_at', 'desc'));
+      const querySnapshot = await getDocs(q);
+      const mapped: Property[] = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          title: data.title,
+          type: data.type,
+          listingType: data.listing_type,
+          price: data.price,
+          location: data.location,
+          size: data.size,
+          bedrooms: data.bedrooms,
+          bathrooms: data.bathrooms || 0,
+          garage: data.garage || 0,
+          description: data.description,
+          images: data.images,
+          featured: data.featured
+        };
+      });
+      setDbProperties(mapped);
     } catch (err) {
-      console.error('Error fetching properties from Supabase:', err);
+      console.error('Error fetching properties from Firestore:', err);
     }
   };
 
   const allAvailableProperties = [...dbProperties, ...PROPERTIES].filter(p => !soldIds.includes(p.id.toString()));
-  const featuredProperties = allAvailableProperties.filter(p => p.featured || dbProperties.includes(p)).slice(0, 3);
+  const featuredProperties = allAvailableProperties.filter(p => p.featured).slice(0, 3);
   const apartmentProperties = allAvailableProperties.filter(p => p.type === 'Apartamento').slice(0, 3);
   const houseProperties = allAvailableProperties.filter(p => p.type === 'Casa').slice(0, 3);
   const ruralProperties = allAvailableProperties.filter(p => p.type === 'Terreno' || p.type === 'Chácara').slice(0, 3);
+
 
   const services = [
     { id: 'aluguel', title: 'Imóveis para Alugar', icon: <Key className="h-6 w-6" />, color: 'bg-emerald-50 text-emerald-600', path: '/aluguel', badge: 'Essencial' },

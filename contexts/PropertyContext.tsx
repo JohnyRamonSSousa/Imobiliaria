@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Property } from '../types';
 import { PROPERTIES } from '../constants';
-import { supabase } from '../services/supabase';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../services/firebase';
 
 interface PropertyContextType {
     selectedProperty: Property | null;
     openPropertyDetails: (property: Property) => void;
-    openPropertyDetailsById: (id: string) => Promise<void>;
+    openPropertyDetailsById: (id: string, propertyData?: any) => Promise<void>;
     closePropertyDetails: () => void;
 }
 
@@ -19,7 +20,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
         setSelectedProperty(property);
     };
 
-    const openPropertyDetailsById = async (id: string) => {
+    const openPropertyDetailsById = async (id: string, propertyData?: any) => {
         // 1. Check local constants
         const foundLocal = PROPERTIES.find(p => p.id === id);
         if (foundLocal) {
@@ -27,17 +28,21 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
             return;
         }
 
-        // 2. Check Supabase
-        try {
-            const { data, error } = await supabase
-                .from('properties')
-                .select('*')
-                .eq('id', id)
-                .single();
+        // 2. Check if property data already exists (e.g. from a list search)
+        if (propertyData) {
+            setSelectedProperty(propertyData);
+            return;
+        }
 
-            if (data && !error) {
+        // 3. Try Firebase Firestore
+        try {
+            const docRef = doc(db, 'properties', id);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
                 const mapped: Property = {
-                    id: data.id,
+                    id: docSnap.id,
                     title: data.title,
                     type: data.type,
                     listingType: data.listing_type,
@@ -52,9 +57,11 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
                     featured: data.featured
                 };
                 setSelectedProperty(mapped);
+            } else {
+                console.log(`Property ${id} not found in Firestore or local constants.`);
             }
         } catch (err) {
-            console.error('Error fetching property by ID:', err);
+            console.error('Error fetching property from Firestore:', err);
         }
     };
 
@@ -76,3 +83,4 @@ export const usePropertyDetails = () => {
     }
     return context;
 };
+

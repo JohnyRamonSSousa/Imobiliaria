@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Image as ImageIcon, Plus, Check, Lock, X, AlertCircle, MapPin } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../services/supabase';
 import { STATES } from '../constants';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { db as firestoreDb, storage } from '../services/firebase';
 
 const SellProperty: React.FC = () => {
   const navigate = useNavigate();
@@ -66,36 +68,45 @@ const SellProperty: React.FC = () => {
     setError(null);
 
     try {
-      const { data, error: insertError } = await supabase
-        .from('properties')
-        .insert([
-          {
-            title,
-            type,
-            listing_type: listingType,
-            price: parseFloat(price),
-            description,
-            size: parseInt(size),
-            bedrooms: parseInt(bedrooms) || 0,
-            bathrooms: parseInt(bathrooms) || 0,
-            garage: parseInt(garage) || 0,
-            images,
-            location: { state, city, neighborhood },
-            user_id: user?.id,
-            featured: true
-          } as any
-        ]);
+      // 1. Upload images to Firebase Storage
+      const imageUrls: string[] = [];
+      for (let i = 0; i < images.length; i++) {
+        const imageRef = ref(storage, `properties/${Date.now()}_${i}.jpg`);
+        await uploadString(imageRef, images[i], 'data_url');
+        const url = await getDownloadURL(imageRef);
+        imageUrls.push(url);
+      }
 
-      if (insertError) throw insertError;
+      // 2. Save property to Firestore
+      await addDoc(collection(firestoreDb, 'properties'), {
+        title,
+        type,
+        listing_type: listingType,
+        price: parseFloat(price),
+        description,
+        size: parseInt(size),
+        bedrooms: parseInt(bedrooms) || 0,
+        bathrooms: parseInt(bathrooms) || 0,
+        garage: parseInt(garage) || 0,
+        images: imageUrls,
+        location: { state, city, neighborhood },
+        user_id: user?.uid,
+        user_email: user?.email,
+        featured: true,
+        created_at: serverTimestamp()
+      });
 
-      setIsSubmitting(false);
       setSuccess(true);
       setTimeout(() => navigate('/imoveis'), 2500);
     } catch (err: any) {
-      setError(err.message || 'Erro ao publicar anúncio. Tente novamente.');
+      console.error('Firebase submission error:', err);
+      setError('Erro ao publicar anúncio. Tente novamente.');
+    } finally {
       setIsSubmitting(false);
     }
   };
+
+
 
   if (loading || !isLoggedIn) {
     return (

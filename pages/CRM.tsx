@@ -4,8 +4,10 @@ import { User as UserIcon, LogOut, Home, Key, Clock, Settings, Wallet, Bell, Che
 import { db, Transaction } from '../services/database';
 import { useAuth } from '../contexts/AuthContext';
 import { usePropertyDetails } from '../contexts/PropertyContext';
-import { supabase } from '../services/supabase';
 import DeleteAccountModal from '../components/DeleteAccountModal';
+import { collection, query, where, getDocs, doc, deleteDoc } from 'firebase/firestore';
+import { db as firestoreDb } from '../services/firebase';
+
 const CRM: React.FC = () => {
     const navigate = useNavigate();
     const { user, signOut } = useAuth();
@@ -18,26 +20,25 @@ const CRM: React.FC = () => {
     const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
 
     const userEmail = user?.email || 'cliente@exemplo.com';
-    const userName = user?.user_metadata?.full_name || userEmail.split('@')[0];
+    const userName = user?.displayName || userEmail.split('@')[0];
 
     const loadData = async () => {
-        // Transactions
+        // Transactions (Local DB)
         const allTxs = db.getUserTransactions(userEmail);
         setTransactions(allTxs);
 
-        // My Listings from Supabase
-        if (user?.id) {
+        // My Listings (Firebase Firestore)
+        if (user) {
             try {
-                const { data, error } = await supabase
-                    .from('properties')
-                    .select('*')
-                    .eq('user_id', user.id);
-
-                if (!error && data) {
-                    setMyProperties(data);
-                }
+                const q = query(collection(firestoreDb, 'properties'), where('user_id', '==', user.uid));
+                const querySnapshot = await getDocs(q);
+                const properties = querySnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                setMyProperties(properties);
             } catch (err) {
-                console.error('Error fetching my properties:', err);
+                console.error('Error loading my properties:', err);
             }
         }
     };
@@ -57,27 +58,21 @@ const CRM: React.FC = () => {
     };
 
     const handleDeleteProperty = async (id: string) => {
-        if (!window.confirm('Tem certeza que deseja excluir este anúncio? Esta ação não pode ser desfeita.')) return;
+        if (!window.confirm('Tem certeza que deseja excluir este anúncio?')) return;
 
         setIsDeleting(id);
         try {
-            const { error } = await supabase
-                .from('properties')
-                .delete()
-                .eq('id', id);
-
-            if (error) throw error;
-
-            setMyProperties(prev => prev.filter(p => p.id !== id));
-        } catch (err: any) {
-            alert('Erro ao excluir anúncio: ' + err.message);
+            await deleteDoc(doc(firestoreDb, 'properties', id));
+            loadData();
+        } catch (err) {
+            console.error('Error deleting property:', err);
+            alert('Erro ao excluir anúncio.');
         } finally {
             setIsDeleting(null);
         }
     };
 
     const handleDeleteAccount = () => {
-        console.log('Delete Account Button Clicked');
         setShowDeleteAccountModal(true);
     };
 
@@ -87,27 +82,28 @@ const CRM: React.FC = () => {
             // 1. Delete transactions from local storage
             db.deleteUserTransactions(userEmail);
 
-            // 2. Delete properties from Supabase
-            if (user?.id) {
-                await supabase
-                    .from('properties')
-                    .delete()
-                    .eq('user_id', user.id);
+            // 2. Delete Firebase Auth account
+            if (user) {
+                const { deleteUser } = await import('firebase/auth');
+                await deleteUser(user);
             }
 
-            // 3. Sign out
-            await signOut();
-
-            // 4. Redirect
-            alert('Sua conta e seus dados foram excluídos com sucesso.');
+            // 3. Redirect (signOut not needed as deleteUser invalidates the session)
             navigate('/');
         } catch (err: any) {
-            alert('Erro ao excluir conta: ' + err.message);
+            if (err.code === 'auth/requires-recent-login') {
+                alert('Por segurança, faça login novamente antes de excluir sua conta.');
+                await signOut();
+                navigate('/login');
+            } else {
+                alert('Erro ao excluir conta.');
+            }
         } finally {
             setIsDeletingAccount(false);
             setShowDeleteAccountModal(false);
         }
     };
+
 
     const handleComplete = (id: string) => {
         if (db.updateTransactionStatus(id, 'completed')) {
@@ -373,7 +369,7 @@ const CRM: React.FC = () => {
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold text-gray-400 uppercase mb-2">CPF</label>
-                                                <input type="text" placeholder="000.000.000-00" className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 outline-none focus:border-indigo-500 font-medium" />
+                                                <input type="text" placeholder="000.000.000-00" maxLength={14} className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 outline-none focus:border-indigo-500 font-medium" />
                                             </div>
                                         </div>
                                         <div className="flex justify-end">
